@@ -63,6 +63,12 @@ class AdvertController extends Controller
     		$request->getSession()->getFlashBag()->add('notice', 'annonce bien enregistrée');
     		return new RedirectToRoute('oc_platform_view', array('id'=>5));
     	}
+
+        $antispam = $this->get('oc_platform.antispam');
+        $text = '...';
+        if($antispam->isSpam($text)){
+            throw new \Exception('Votre message a été détécté comme spam');
+        }
     	return $this->render('OCPlatformBundle:Advert:add.html.twig');
     }
 
