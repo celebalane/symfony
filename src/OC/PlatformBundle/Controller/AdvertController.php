@@ -46,28 +46,29 @@ class AdvertController extends Controller
     		array('id'=>2, 'title'=>'Recherche développeur Symfony'),
     		array('id'=>5,'title'=>'Mission de webmaster'),
     		array('id'=>9, 'title'=>'Offre de stage webdesigner'));
+
     	return $this->render('OCPlatformBundle:Advert:menu.html.twig', array('listAdverts'=>$listAdverts));
     }
 
     public function viewAction($id)
     {
-    	$em = $this->getDoctrine()->getManager();
+    	$em = $this->getDoctrine()->getManager(); //Enclenche les processus de Doctrine pour les entités (objets)
 
-        $advert = $em->getRepository('OCPlatformBundle:Advert')->find($id);
+        $advert = $em->getRepository('OCPlatformBundle:Advert')->find($id); //Doctrine va chercher l'objet Advert en fonction de son id
 
         if(null===$advert){
             throw new NotFoundHttpException("L'annonce ".$id." n'existe pas");
         }
 
-        $listApplications = $em->getRepository('OCPlatformBundle:Application')->findBy(array('advert'=>$advert));
+        $listApplications = $em->getRepository('OCPlatformBundle:Application')->findBy(array('advert'=>$advert)); //Cherche toutes les candidatures (objet Application) liées à l'annonce précédement cherchée
     	return $this->render('OCPlatformBundle:Advert:view.html.twig', array('advert'=>$advert, 'listApplications'=>$listApplications));
     }
 
     public function addAction(Request $request)
     {
     	if($request->isMethod('POST')){
-    		$request->getSession()->getFlashBag()->add('notice', 'annonce bien enregistrée');
-    		return new RedirectToRoute('oc_platform_view', array('id'=>$advert->getId()));
+    		$request->getSession()->getFlashBag()->add('notice', 'annonce bien enregistrée'); //Message flash
+    		return new RedirectToRoute('oc_platform_view', array('id'=>$advert->getId())); //Change de page sur l'annonce créee et affiche le message(a ajouter dans la view)
     	}
 
         $advert = new Advert();
@@ -92,10 +93,10 @@ class AdvertController extends Controller
         $application2->setAdvert($advert);
 
         $em = $this->getDoctrine()->getManager();
-        $em->persist($advert);
+        $em->persist($advert); //persist = dire à doctrine de s'occuper de l'objet
         $em->persist($application1);
         $em->persist($application2);
-        $em->flush();
+        $em->flush();   //Un seul flush pour tout enregistrer dans la bdd
 
 /*        $antispam = $this->get('oc_platform.antispam');
         $text = '...';
@@ -123,7 +124,7 @@ class AdvertController extends Controller
         $listCategories = $em->getRepository('OCPlatformBundle:Category')->findAll();
 
         foreach ($listCategories as $category) {
-            $advert->addCategory($category);
+            $advert->addCategory($category);  //Pour chaque annonce, on lui assigne toutes les categories contenues dans  listCategories
         }
 
         $em->flush();
@@ -142,7 +143,7 @@ class AdvertController extends Controller
         }
 
         foreach ($advert->getCategories() as $category) {
-            $advert->removeCategory($category);
+            $advert->removeCategory($category); //Enlève seulement les categories associées
         }
 
         $em->flush();
