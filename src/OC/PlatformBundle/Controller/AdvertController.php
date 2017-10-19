@@ -9,6 +9,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use OC\PlatformBundle\Entity\Advert;
 use OC\PlatformBundle\Entity\Image;
 use OC\PlatformBundle\Entity\Application;
+use OC\PlatformBundle\Entity\AdvertSkill;
 
 class AdvertController extends Controller
 {
@@ -61,7 +62,8 @@ class AdvertController extends Controller
         }
 
         $listApplications = $em->getRepository('OCPlatformBundle:Application')->findBy(array('advert'=>$advert)); //Cherche toutes les candidatures (objet Application) liées à l'annonce précédement cherchée
-    	return $this->render('OCPlatformBundle:Advert:view.html.twig', array('advert'=>$advert, 'listApplications'=>$listApplications));
+        $listAdvertSkills = $em->getRepository('OCPlatformBundle:AdvertSkill')->findBy(array('advert'=>$advert));
+    	return $this->render('OCPlatformBundle:Advert:view.html.twig', array('advert'=>$advert, 'listApplications'=>$listApplications, 'listAdvertSkills'=>$listAdvertSkills));
     }
 
     public function addAction(Request $request)
@@ -92,7 +94,20 @@ class AdvertController extends Controller
         $application1->setAdvert($advert);
         $application2->setAdvert($advert);
 
+       
+
         $em = $this->getDoctrine()->getManager();
+         $listSkills = $em->getRepository('OCPlatformBundle:Skill')->findAll(); //Récupère les compétences
+
+        foreach ($listSkills as $skill) {
+            
+            $advertSkill = new AdvertSkill();// On crée une nouvelle « relation entre 1 annonce et 1 compétence »
+            $advertSkill->setAdvert($advert); //Lie l'annonce'
+            $advertSkill->setSkill($skill); //Lie à l'annonce la compétence
+            $advertSkill->setLevel('Expert');
+            $em->persist($advertSkill);
+        }
+
         $em->persist($advert); //persist = dire à doctrine de s'occuper de l'objet
         $em->persist($application1);
         $em->persist($application2);
