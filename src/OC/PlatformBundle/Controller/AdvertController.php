@@ -76,6 +76,7 @@ class AdvertController extends Controller
         $advert = new Advert();
         $advert->setTitle('Recherche développpeur Symfony2');
         $advert->setAuthor('alexandre');
+        $advert->setMail('celebalane@gmail.com');
         $advert->setContent('Nous recherchons un développeur Symfony2 débutant sur Lyon. Blabla…');
 
         $image = new Image();
@@ -84,10 +85,12 @@ class AdvertController extends Controller
 
         $application1 = new Application();
         $application1->setAuthor('Marine');
+        $application1->setMail('celebalane@gmail.com');
         $application1->setContent('Je suis ok!');
 
         $application2 = new Application();
         $application2->setAuthor('Mango');
+        $application2->setMail('celebalane@gmail.com');
         $application2->setContent('Je suis le meilleur!');
 
         $advert->setImage($image);

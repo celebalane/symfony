@@ -9,6 +9,7 @@ use Doctrine\ORM\Mapping as ORM;
  *
  * @ORM\Table(name="application")
  * @ORM\Entity(repositoryClass="OC\PlatformBundle\Repository\ApplicationRepository")
+ * @ORM\HasLifecycleCallbacks()
  */
 class Application
 {
@@ -27,6 +28,13 @@ class Application
      * @ORM\Column(name="author", type="string", length=255)
      */
     private $author;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="mail", type="string", length=255)
+     */
+    private $mail;
 
     /**
      * @var string
@@ -85,6 +93,31 @@ class Application
     public function getAuthor()
     {
         return $this->author;
+    }
+
+
+    /**
+     * Set mail
+     *
+     * @param string $author
+     *
+     * @return Application
+     */
+    public function setMail($mail)
+    {
+        $this->mail = $mail;
+
+        return $this;
+    }
+
+    /**
+     * Get mail
+     *
+     * @return string
+     */
+    public function getMail()
+    {
+        return $this->mail;
     }
 
     /**
@@ -157,5 +190,21 @@ class Application
     public function getAdvert()
     {
         return $this->advert;
+    }
+
+    /**
+    * @ORM\PrePersist
+    */
+    public function increase()   //Augmente le compteur de candidature
+    {
+        $this->getAdvert()->increaseApplication();
+    }
+
+    /**
+    * @ORM\PreRemove
+    */
+    public function decrease()
+    {
+        $this->getAdvert()->decreaseApplication();
     }
 }
