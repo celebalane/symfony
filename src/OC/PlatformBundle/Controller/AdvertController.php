@@ -2,14 +2,13 @@
 
 namespace OC\PlatformBundle\Controller;
 
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use OC\PlatformBundle\Entity\Advert;
-use OC\PlatformBundle\Entity\Image;
-use OC\PlatformBundle\Entity\Application;
-use OC\PlatformBundle\Entity\AdvertSkill;
+use OC\PlatformBundle\Form\AdvertType;
+use OC\PlatformBundle\Form\AdvertEditType;
+
 
 class AdvertController extends Controller
 {
@@ -18,35 +17,28 @@ class AdvertController extends Controller
     	if ($page<1){
     		throw new NotFoundHTTPException("La page ".$page." n'existe pas");
     	}
-    	$listAdverts = array(
-      array(
-        'title'   => 'Recherche développpeur Symfony',
-        'id'      => 1,
-        'author'  => 'Alexandre',
-        'content' => 'Nous recherchons un développeur Symfony débutant sur Lyon. Blabla…',
-        'date'    => new \Datetime()),
-      array(
-        'title'   => 'Mission de webmaster',
-        'id'      => 2,
-        'author'  => 'Hugo',
-        'content' => 'Nous recherchons un webmaster capable de maintenir notre site internet. Blabla…',
-        'date'    => new \Datetime()),
-      array(
-        'title'   => 'Offre de stage webdesigner',
-        'id'      => 3,
-        'author'  => 'Mathieu',
-        'content' => 'Nous proposons un poste pour webdesigner. Blabla…',
-        'date'    => new \Datetime())
-    );
-    	return $this->render('OCPlatformBundle:Advert:index.html.twig', array('listAdverts'=>$listAdverts));
+
+        $nbPerPage=3;
+    	$listAdverts = $this->getDoctrine()  
+                            ->getManager()
+                            ->getRepository('OCPlatformBundle:Advert')
+                            ->getAdverts($page, $nbPerPage);  //Récupère toutes les annonces
+
+        $nbPages = ceil(count($listAdverts)/$nbPerPage); //calcul du nb de page à afficher
+
+        if ($page>$nbPages){
+            throw new NotFoundHTTPException("La page ".$page." n'existe pas");
+        }
+
+
+    	return $this->render('OCPlatformBundle:Advert:index.html.twig', array('listAdverts'=>$listAdverts, 'nbPages'=>$nbPages, 'page'=>$page));
     }
 
     public function menuAction($limit)
     {
-    	$listAdverts = array(
-    		array('id'=>2, 'title'=>'Recherche développeur Symfony'),
-    		array('id'=>5,'title'=>'Mission de webmaster'),
-    		array('id'=>9, 'title'=>'Offre de stage webdesigner'));
+    	$em = $this->getDoctrine()->getManager();
+
+        $listAdverts = $em->getRepository('OCPlatformBundle:Advert')->findBy(array(),array('date'=>'desc'),$limit,0);
 
     	return $this->render('OCPlatformBundle:Advert:menu.html.twig', array('listAdverts'=>$listAdverts));
     }
@@ -68,60 +60,25 @@ class AdvertController extends Controller
 
     public function addAction(Request $request)
     {
+        $advert = new Advert(); //Ajout d une annonce
+
+        $form = $this->createForm(AdvertType::class, $advert); 
+
     	if($request->isMethod('POST')){
-    		$request->getSession()->getFlashBag()->add('notice', 'annonce bien enregistrée'); //Message flash
-    		return new RedirectToRoute('oc_platform_view', array('id'=>$advert->getId())); //Change de page sur l'annonce créee et affiche le message(a ajouter dans la view)
+    		$form ->handleRequest($request); //Lie les valeurs du formulaire à $advert
+
+            if($form->isValid()){//si valide on enregistre en bdd 
+                $em = $this->getDoctrine()->getManager();
+                $em->persist($advert);
+                $em->flush();
+
+                $request->getsession()->getflashBag()->add('notice', 'Votre annonce a bien été enregistrée'); //Notification
+
+                return $this->RedirectToRoute('oc_platform_view', array('id'=>$advert->getId()));
+            }
     	}
 
-        $advert = new Advert();
-        $advert->setTitle('Recherche développpeur Symfony2');
-        $advert->setAuthor('alexandre');
-        $advert->setMail('celebalane@gmail.com');
-        $advert->setContent('Nous recherchons un développeur Symfony2 débutant sur Lyon. Blabla…');
-
-        $image = new Image();
-        $image->setUrl('http://sdz-upload.s3.amazonaws.com/prod/upload/job-de-reve.jpg');
-        $image->setAlt('Job de rêve');
-
-        $application1 = new Application();
-        $application1->setAuthor('Marine');
-        $application1->setMail('celebalane@gmail.com');
-        $application1->setContent('Je suis ok!');
-
-        $application2 = new Application();
-        $application2->setAuthor('Mango');
-        $application2->setMail('celebalane@gmail.com');
-        $application2->setContent('Je suis le meilleur!');
-
-        $advert->setImage($image);
-        $application1->setAdvert($advert);
-        $application2->setAdvert($advert);
-
-       
-
-        $em = $this->getDoctrine()->getManager();
-         $listSkills = $em->getRepository('OCPlatformBundle:Skill')->findAll(); //Récupère les compétences
-
-        foreach ($listSkills as $skill) {
-            
-            $advertSkill = new AdvertSkill();// On crée une nouvelle « relation entre 1 annonce et 1 compétence »
-            $advertSkill->setAdvert($advert); //Lie l'annonce'
-            $advertSkill->setSkill($skill); //Lie à l'annonce la compétence
-            $advertSkill->setLevel('Expert');
-            $em->persist($advertSkill);
-        }
-
-        $em->persist($advert); //persist = dire à doctrine de s'occuper de l'objet
-        $em->persist($application1);
-        $em->persist($application2);
-        $em->flush();   //Un seul flush pour tout enregistrer dans la bdd
-
-/*        $antispam = $this->get('oc_platform.antispam');
-        $text = '...';
-        if($antispam->isSpam($text)){
-            throw new \Exception('Votre message a été détécté comme spam');
-        }*/
-    	return $this->render('OCPlatformBundle:Advert:add.html.twig',array('advert'=>$advert));
+    	return $this->render('OCPlatformBundle:Advert:add.html.twig', array('form'=>$form->createView()));
     }
 
     public function editAction($id, Request $request)
@@ -130,24 +87,21 @@ class AdvertController extends Controller
 
         $advert = $em->getRepository('OCPlatformBundle:Advert')->find($id);
 
-    	if($request->isMethod('POST')){
-    		$request->getSession()->getFlashBag()->add('notice','annonce bien modifiée');
-    		return new RedirectToRoute('oc_platform_view', array('id' => 5));
-    	}
-
         if (null === $advert) {
             throw new NotFoundHttpException("L'annonce d'id ".$id." n'existe pas.");
         }
 
-        $listCategories = $em->getRepository('OCPlatformBundle:Category')->findAll();
+        $form = $this->get('form.factory')->create(AdvertEditType::class, $advert);
 
-        foreach ($listCategories as $category) {
-            $advert->addCategory($category);  //Pour chaque annonce, on lui assigne toutes les categories contenues dans  listCategories
+        if ($request->isMethod('POST') && $form->handleRequest($request)->isValid()) {
+            $em->flush(); //On enregistre les modifs
+
+            $request->getSession()->getFlashBag()->add('notice', "L'annonce a bien été modifiée.");
+
+            return $this->redirectToRoute('oc_platform_view', array('id' => $advert->getId()));
         }
 
-        $em->flush();
-
-    	return $this->render('OCPlatformBundle:Advert:edit.html.twig', array('advert'=>$advert));
+        return $this->render('OCPlatformBundle:Advert:edit.html.twig', array('advert' => $advert,'form'   => $form->createView()));
     }
 
     public function deleteAction($id)
@@ -160,12 +114,17 @@ class AdvertController extends Controller
             throw new NotFoundHttpException("L'annonce d'id ".$id." n'existe pas.");
         }
 
-        foreach ($advert->getCategories() as $category) {
-            $advert->removeCategory($category); //Enlève seulement les categories associées
+        $form = $this->get('form.factory')->create(); //Création d'un form vide n'ayant qu'un champ CSRF pour proteger d'une faille
+
+        if ($request->isMethod('POST') && $form->handleRequest($request)->isValid()) {
+            $em->remove($advert);
+            $em->flush();
+
+            $request->getSession()->getFlashBag()->add('info', "L'annonce a bien été supprimée.");
+
+            return $this->redirectToRoute('oc_platform_home');
         }
-
-        $em->flush();
-
-    	return $this->render('OCPlatformBundle:Advert:delete.html.twig');
+    
+        return $this->render('OCPlatformBundle:Advert:delete.html.twig', array('advert' => $advert,'form'   => $form->createView()));
     }
 }
