@@ -24,7 +24,7 @@ class AdvertController extends Controller
                             ->getRepository('OCPlatformBundle:Advert')
                             ->getAdverts($page, $nbPerPage);  //Récupère toutes les annonces
 
-        $nbPages = ceil(count($listAdverts)/$nbPerPage); //calcul du nb de page à afficher
+        $nbPages = ceil(count($listAdverts)/$nbPerPage); //calcul du nb de page à afficher pour la pagination
 
         if ($page>$nbPages){
             throw new NotFoundHTTPException("La page ".$page." n'existe pas");
