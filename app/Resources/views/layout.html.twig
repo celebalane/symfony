@@ -15,6 +15,7 @@
           Connecté en tant que {{ app.user.username }}
           <a href="{{ path('fos_user_security_logout') }}">Déconnexion</a>
         {% else %}
+          <a href="{{ path('fos_user_registration_register') }}">Inscription</a>
           <a href="{{ path('fos_user_security_login') }}">Connexion</a>
         {% endif %}
       	<h1>Ma plateforme d'annonces</h1>
