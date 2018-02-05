@@ -8,7 +8,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use OC\PlatformBundle\Entity\Advert;
 use OC\PlatformBundle\Form\AdvertType;
 use OC\PlatformBundle\Form\AdvertEditType;
-
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 class AdvertController extends Controller
 {
@@ -60,6 +60,10 @@ class AdvertController extends Controller
 
     public function addAction(Request $request)
     {
+        if (!$this->get('security.authorization_checker')->isGranted('ROLE_AUTEUR')) { //Verification role utilisateur
+      
+            throw new AccessDeniedException('Accès limité aux auteurs.');
+        }
         $advert = new Advert(); //Ajout d une annonce
 
         $form = $this->createForm(AdvertType::class, $advert); 

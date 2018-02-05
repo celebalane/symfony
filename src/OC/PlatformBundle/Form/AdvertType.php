@@ -25,7 +25,7 @@ class AdvertType extends AbstractType
             ->add('author',    TextType::class)
             ->add('content',   TextareaType::class)
             ->add('published', CheckboxType::class, array('required' => false))
-            ->add('image',     ImageType::class)
+            ->add('image',     ImageType::class, array('required' => false))
             ->add('categories', EntityType::class, array(    //Permet de faire un <select>
                     'class'        => 'OCPlatformBundle:Category',
                     'choice_label' => 'name',

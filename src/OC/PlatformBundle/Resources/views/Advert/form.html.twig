@@ -33,8 +33,8 @@
   {{ form_row(form.published) }}
 
   {# Pour le bouton, pas de label ni d'erreur, on affiche juste le widget #}
-  {{ form_widget(form.save, {'attr': {'class': 'btn btn-primary'}}) }}
   {{ form_rest(form) }}
+  {{ form_widget(form.save, {'attr': {'class': 'btn btn-primary'}}) }}
   {{ form_end(form) }}
 </div>
 
