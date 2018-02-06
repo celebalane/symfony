@@ -72,6 +72,15 @@ class AdvertController extends Controller
     		$form ->handleRequest($request); //Lie les valeurs du formulaire à $advert
 
             if($form->isValid()){//si valide on enregistre en bdd 
+                // On crée l'évènement avec ses 2 arguments
+                $event = new MessagePostEvent($advert->getContent(), $advert->getUser());
+
+                // On déclenche l'évènement
+                $this->get('event_dispatcher')->dispatch(PlatformEvents::POST_MESSAGE, $event);
+
+                // On récupère ce qui a été modifié par le ou les listeners, ici le message
+                $advert->setContent($event->getMessage());
+                
                 $em = $this->getDoctrine()->getManager();
                 $em->persist($advert);
                 $em->flush();

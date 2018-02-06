@@ -20,6 +20,17 @@ services:
       class: OC\PlatformBundle\Beta\BetaListener
       arguments:
         - "@oc_platform.beta.html_adder"
-        - "2018-06-05"
+        - "2018-01-05"
       tags:
         - { name: kernel.event_listener, event: kernel.response, method: processBeta }
+    # oc_platform.bigbrother.message_notificator:
+    #   class: OC\PlatformBundle\Bigbrother\MessageNotificator
+    #   arguments:
+    #     - "@mailer"
+    # oc_platform.bigbrother.message_listener:
+    #   class: OC\PlatformBundle\Bigbrother\MessageListener
+    #   arguments:
+    #     - "@oc_platform.bigbrother.message_notificator"
+    #     - ["alexandre", "marine", "pierre"]
+    #   tags:
+    #     - { name: kernel.event_listener, event: oc_platform.post_message, method: processMessage }
